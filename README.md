@@ -1,14 +1,27 @@
-# Zephyr Scale MCP Server
+# Zephyr MCP Server
 
-MCP (Model Context Protocol) server for **Zephyr Scale** test management — providing AI-powered access to test cases, test cycles, and test executions.
+MCP (Model Context Protocol) server for **Zephyr Scale** and **Zephyr Squad** test management — providing AI-powered access to test cases, test cycles, and test executions.
 
 ## Features
+
+### Zephyr Scale
 
 - **Test Cases**: Get, search, create, update, and link test cases to Jira issues
 - **Test Cycles**: Get, create test cycles with planned dates and versions
 - **Test Executions**: Get, create, update test execution results
 - **Authentication**: Supports Personal Access Token (PAT), Basic Auth, and OAuth 2.0
+
+### Zephyr Squad
+
+- **Test Cycles**: Get, list, create, and manage Squad test cycles
+- **Test Executions**: Get executions, add tests to cycles, update execution status
+- **ZQL Search**: Execute Zephyr Query Language searches
+- **Authentication**: JWT token authentication with access key, secret key, and account ID
+
+### Common
+
 - **Read-Only Mode**: Optional flag to prevent write operations
+- **Dual Product Support**: Use Scale, Squad, or both simultaneously
 
 ## Setup
 
@@ -51,6 +64,20 @@ Set the following environment variables:
 | `ZEPHYR_CUSTOM_HEADERS` | No | Comma-separated `key=value` pairs |
 
 \* At least one authentication method must be configured: PAT, Basic (email + api_token), or OAuth.
+
+#### Zephyr Squad Configuration
+
+For Zephyr Squad Cloud support, set the following environment variables:
+
+| Variable | Required | Description |
+|---|---|---|
+| `ZEPHYR_SQUAD_ACCESS_KEY` | **Yes** | Zephyr Squad API access key |
+| `ZEPHYR_SQUAD_SECRET_KEY` | **Yes** | Zephyr Squad API secret key |
+| `ZEPHYR_SQUAD_ACCOUNT_ID` | **Yes** | Jira Cloud account ID |
+| `ZEPHYR_SQUAD_PROJECT_ID` | No | Default Jira project ID (numeric) |
+| `ZEPHYR_SQUAD_BASE_URL` | No | Squad API base URL (default: `https://prod-api.zephyr4jiracloud.com/connect`) |
+
+You can find your access/secret keys in Jira under **Apps > Zephyr Squad > API Keys**.
 
 #### OAuth Configuration
 
@@ -126,6 +153,31 @@ Add to your MCP client config (e.g., Claude Desktop):
 }
 ```
 
+#### Using Docker with Zephyr Squad
+
+```json
+{
+  "mcpServers": {
+    "zephyr": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "ZEPHYR_SQUAD_ACCESS_KEY",
+        "-e", "ZEPHYR_SQUAD_SECRET_KEY",
+        "-e", "ZEPHYR_SQUAD_ACCOUNT_ID",
+        "ghcr.io/dloiacono/zephyr-mcp:latest",
+        "--transport", "stdio"
+      ],
+      "env": {
+        "ZEPHYR_SQUAD_ACCESS_KEY": "your-access-key",
+        "ZEPHYR_SQUAD_SECRET_KEY": "your-secret-key",
+        "ZEPHYR_SQUAD_ACCOUNT_ID": "your-account-id"
+      }
+    }
+  }
+}
+```
+
 You can also run the Docker image as a standalone SSE server:
 
 ```bash
@@ -136,6 +188,8 @@ docker run -p 8000:8000 \
 ```
 
 ## Available Tools
+
+### Zephyr Scale Tools
 
 | Tool | Description | Write |
 |---|---|---|
@@ -149,6 +203,19 @@ docker run -p 8000:8000 \
 | `zephyr_create_test_execution` | Create a new test execution | Yes |
 | `zephyr_update_test_execution` | Update a test execution | Yes |
 | `zephyr_link_test_case_to_issue` | Link test case to Jira issue | Yes |
+
+### Zephyr Squad Tools
+
+| Tool | Description | Write |
+|---|---|---|
+| `squad_get_cycle` | Get a Squad test cycle by ID | No |
+| `squad_get_cycles` | List all cycles for a project | No |
+| `squad_create_cycle` | Create a new Squad test cycle | Yes |
+| `squad_get_execution` | Get a Squad test execution by ID | No |
+| `squad_get_executions_by_cycle` | Get all executions for a cycle | No |
+| `squad_add_test_to_cycle` | Add a test (Jira issue) to a cycle | Yes |
+| `squad_update_execution` | Update execution status/comment | Yes |
+| `squad_zql_search` | Execute a ZQL search query | No |
 
 ## Development
 
