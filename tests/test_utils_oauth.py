@@ -379,7 +379,10 @@ class TestOAuthConfig:
         mock_post.return_value = mock_response
 
         config = OAuthConfig(
-            client_id="id", client_secret="secret", redirect_uri="uri", scope="scope",
+            client_id="id",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
             refresh_token="old_refresh",
         )
         result = config.refresh_access_token()
@@ -391,7 +394,10 @@ class TestOAuthConfig:
     def test_refresh_access_token_failure(self, mock_post):
         mock_post.side_effect = Exception("network error")
         config = OAuthConfig(
-            client_id="id", client_secret="secret", redirect_uri="uri", scope="scope",
+            client_id="id",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
             refresh_token="ref",
         )
         result = config.refresh_access_token()
@@ -405,7 +411,10 @@ class TestOAuthConfig:
         mock_get.return_value = mock_response
 
         config = OAuthConfig(
-            client_id="id", client_secret="secret", redirect_uri="uri", scope="scope",
+            client_id="id",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
             access_token="tok",
         )
         config._get_cloud_id()
@@ -413,7 +422,10 @@ class TestOAuthConfig:
 
     def test_get_cloud_id_skips_dc(self):
         config = OAuthConfig(
-            client_id="id", client_secret="secret", redirect_uri="uri", scope="scope",
+            client_id="id",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
             base_url="https://jira.mycompany.com",
         )
         config._get_cloud_id()
@@ -428,7 +440,10 @@ class TestOAuthConfig:
     def test_get_cloud_id_error(self, mock_get):
         mock_get.side_effect = Exception("fail")
         config = OAuthConfig(
-            client_id="id", client_secret="secret", redirect_uri="uri", scope="scope",
+            client_id="id",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
             access_token="tok",
         )
         config._get_cloud_id()
@@ -438,8 +453,13 @@ class TestOAuthConfig:
     @patch.object(OAuthConfig, "_save_tokens_to_file")
     def test_save_tokens_keyring_success(self, mock_file_save, mock_keyring):
         config = OAuthConfig(
-            client_id="myid", client_secret="secret", redirect_uri="uri", scope="scope",
-            access_token="tok", refresh_token="ref", cloud_id="cloud-1",
+            client_id="myid",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
+            access_token="tok",
+            refresh_token="ref",
+            cloud_id="cloud-1",
         )
         config._save_tokens()
         assert mock_keyring.set_password.call_count >= 1
@@ -450,8 +470,12 @@ class TestOAuthConfig:
     def test_save_tokens_keyring_error_falls_back_to_file(self, mock_file_save, mock_keyring):
         mock_keyring.set_password.side_effect = Exception("keyring unavailable")
         config = OAuthConfig(
-            client_id="myid", client_secret="secret", redirect_uri="uri", scope="scope",
-            access_token="tok", refresh_token="ref",
+            client_id="myid",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
+            access_token="tok",
+            refresh_token="ref",
         )
         config._save_tokens()
         mock_file_save.assert_called()
@@ -464,8 +488,12 @@ class TestOAuthConfig:
         mock_dir.__truediv__ = MagicMock(return_value=MagicMock())
 
         config = OAuthConfig(
-            client_id="myid", client_secret="secret", redirect_uri="uri", scope="scope",
-            access_token="tok", refresh_token="ref",
+            client_id="myid",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
+            access_token="tok",
+            refresh_token="ref",
         )
         config._save_tokens_to_file({"access_token": "tok"})
 
@@ -477,7 +505,10 @@ class TestOAuthConfig:
         mock_dir.__truediv__ = MagicMock(return_value=MagicMock())
 
         config = OAuthConfig(
-            client_id="myid", client_secret="secret", redirect_uri="uri", scope="scope",
+            client_id="myid",
+            client_secret="secret",
+            redirect_uri="uri",
+            scope="scope",
         )
         config._save_tokens_to_file(None)
 

@@ -25,9 +25,13 @@ class TestCliCallback:
             patch("logging.basicConfig") as mock_log_config,
         ):
             from zephyr_mcp import _cli
+
             _cli.callback(
-                transport=transport, port=port, host=host,
-                read_only=read_only, verbose=verbose,
+                transport=transport,
+                port=port,
+                host=host,
+                read_only=read_only,
+                verbose=verbose,
             )
         return mock_server, mock_create, mock_log_config
 
