@@ -16,7 +16,7 @@ MCP (Model Context Protocol) server for **Zephyr Scale** and **Zephyr Squad** te
 - **Test Cycles**: Get, list, create, and manage Squad test cycles
 - **Test Executions**: Get executions, add tests to cycles, update execution status
 - **ZQL Search**: Execute Zephyr Query Language searches
-- **Authentication**: JWT token authentication with access key, secret key, and account ID
+- **Authentication**: JWT token auth (Cloud Connect API) or PAT/Basic Auth (Jira ZAPI)
 
 ### Common
 
@@ -67,7 +67,22 @@ Set the following environment variables:
 
 #### Zephyr Squad Configuration
 
-For Zephyr Squad Cloud support, set the following environment variables:
+Zephyr Squad supports **two authentication modes**. The mode is auto-detected based on which environment variables are set.
+
+##### Option A: PAT Authentication (Jira ZAPI)
+
+Uses Jira Personal Access Token against `/rest/zapi/latest/` endpoints.
+
+| Variable | Required | Description |
+|---|---|---|
+| `ZEPHYR_SQUAD_PAT_TOKEN` | **Yes** | Jira Personal Access Token or API Token |
+| `ZEPHYR_SQUAD_JIRA_BASE_URL` | **Yes** | Jira instance base URL (e.g., `https://your-domain.atlassian.net`) |
+| `ZEPHYR_SQUAD_JIRA_EMAIL` | No | Email for Cloud Basic Auth (omit for Server/DC Bearer token) |
+| `ZEPHYR_SQUAD_PROJECT_ID` | No | Default Jira project ID (numeric) |
+
+##### Option B: JWT Authentication (Cloud Connect API)
+
+Uses per-request JWT tokens against the Zephyr Squad Cloud Connect API.
 
 | Variable | Required | Description |
 |---|---|---|
@@ -78,6 +93,8 @@ For Zephyr Squad Cloud support, set the following environment variables:
 | `ZEPHYR_SQUAD_BASE_URL` | No | Squad API base URL (default: `https://prod-api.zephyr4jiracloud.com/connect`) |
 
 You can find your access/secret keys in Jira under **Apps > Zephyr Squad > API Keys**.
+
+> **Note:** If both `ZEPHYR_SQUAD_PAT_TOKEN` and `ZEPHYR_SQUAD_ACCESS_KEY` are set, PAT mode takes precedence.
 
 #### OAuth Configuration
 
@@ -153,7 +170,32 @@ Add to your MCP client config (e.g., Claude Desktop):
 }
 ```
 
-#### Using Docker with Zephyr Squad
+#### Using Docker with Zephyr Squad (PAT)
+
+```json
+{
+  "mcpServers": {
+    "zephyr": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "ZEPHYR_SQUAD_PAT_TOKEN",
+        "-e", "ZEPHYR_SQUAD_JIRA_BASE_URL",
+        "-e", "ZEPHYR_SQUAD_JIRA_EMAIL",
+        "ghcr.io/dloiacono/zephyr-mcp:latest",
+        "--transport", "stdio"
+      ],
+      "env": {
+        "ZEPHYR_SQUAD_PAT_TOKEN": "your-pat-or-api-token",
+        "ZEPHYR_SQUAD_JIRA_BASE_URL": "https://your-domain.atlassian.net",
+        "ZEPHYR_SQUAD_JIRA_EMAIL": "your-email@example.com"
+      }
+    }
+  }
+}
+```
+
+#### Using Docker with Zephyr Squad (JWT)
 
 ```json
 {

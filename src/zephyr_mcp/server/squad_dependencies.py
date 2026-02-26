@@ -30,7 +30,11 @@ async def get_squad_fetcher(ctx: Context) -> SquadFetcher:
         pass
 
     logger.error("Zephyr Squad configuration could not be resolved.")
-    raise ValueError("Zephyr Squad client not available. Ensure ZEPHYR_SQUAD_ACCESS_KEY, ZEPHYR_SQUAD_SECRET_KEY, and ZEPHYR_SQUAD_ACCOUNT_ID are set.")
+    raise ValueError(
+        "Zephyr Squad client not available. Configure either: "
+        "PAT mode (ZEPHYR_SQUAD_PAT_TOKEN + ZEPHYR_SQUAD_JIRA_BASE_URL) or "
+        "JWT mode (ZEPHYR_SQUAD_ACCESS_KEY + ZEPHYR_SQUAD_SECRET_KEY + ZEPHYR_SQUAD_ACCOUNT_ID)."
+    )
 
 
 def _get_app_context(ctx: Context) -> AppContext | None:

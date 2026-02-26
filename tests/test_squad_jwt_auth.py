@@ -1,7 +1,6 @@
 """Tests for zephyr_mcp.squad.jwt_auth module."""
 
 import hashlib
-import time
 from unittest.mock import patch
 
 import jwt

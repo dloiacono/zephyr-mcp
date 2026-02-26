@@ -70,20 +70,30 @@
 │              │                   │ │  │  get/add/update/zql_search  │ │
 └──────────────┼───────────────────┘ │  └────────────────────────────┘ │
               │                     │  ┌────────────────────────────┐ │
-              │                     │  │  ZephyrSquadClient          │ │
-              │                     │  │  JWT auth (per-request)     │ │
-              │                     │  │  HMAC-SHA256 canonical path │ │
+              │                     │  │  _create_squad_client()       │ │
+              │                     │  │  (auto-selects by auth_type)  │ │
+              │                     │  ├────────────────────────────┤ │
+              │                     │  │  ZephyrSquadClient (JWT)      │ │
+              │                     │  │  JWT auth (per-request)       │ │
+              │                     │  │  HMAC-SHA256 canonical path   │ │
+              │                     │  ├────────────────────────────┤ │
+              │                     │  │  ZephyrSquadPatClient (PAT)   │ │
+              │                     │  │  Bearer token or Basic Auth   │ │
+              │                     │  │  Jira ZAPI endpoints          │ │
               │                     │  └─────────────┬──────────────┘ │
               │                     └──────────────┼─────────────────┘
               │ HTTPS                            │ HTTPS
               ▼                                   ▼
 ┌──────────────────────────────┐ ┌────────────────────────────────┐
-│  Zephyr Scale REST API         │ │  Zephyr Squad Cloud REST API    │
-│  api.zephyrscale.smartbear.com │ │  prod-api.zephyr4jiracloud.com  │
-│                                │ │                                │
-│  /testcases  /testcycles       │ │  /cycle  /execution             │
-│  /testexecutions  /issuelinks  │ │  /cycles/search                 │
-│                                │ │  /zql/executeSearch             │
+│  Zephyr Scale REST API         │ │  Zephyr Squad APIs               │
+│  api.zephyrscale.smartbear.com │ │                                  │
+│                                │ │  JWT: Cloud Connect API          │
+│  /testcases  /testcycles       │ │  prod-api.zephyr4jiracloud.com   │
+│  /testexecutions  /issuelinks  │ │  /public/rest/api/1.0/           │
+│                                │ │                                  │
+│                                │ │  PAT: Jira ZAPI                  │
+│                                │ │  your-jira.atlassian.net         │
+│                                │ │  /rest/zapi/latest/              │
 └──────────────────────────────┘ └────────────────────────────────┘
 ```
 
@@ -102,9 +112,11 @@ src/zephyr_mcp/
 │   ├── tools.py             # Zephyr Scale MCP tools (10 tools)
 │   └── squad_tools.py       # Zephyr Squad MCP tools (8 tools)
 ├── squad/
-│   ├── __init__.py          # SquadFetcher, ZephyrSquadConfig exports
+│   ├── __init__.py          # SquadFetcher, _create_squad_client exports
 │   ├── client.py            # ZephyrSquadClient (JWT HTTP transport)
-│   ├── config.py            # ZephyrSquadConfig dataclass
+│   ├── pat_client.py        # ZephyrSquadPatClient (PAT/Basic Auth)
+│   ├── protocol.py          # SquadClientProtocol (interface)
+│   ├── config.py            # ZephyrSquadConfig (dual auth: jwt|pat)
 │   ├── jwt_auth.py          # JWT token generation (HMAC-SHA256)
 │   ├── cycles.py            # SquadCyclesMixin
 │   └── executions.py        # SquadExecutionsMixin
@@ -157,29 +169,34 @@ Environment Variables
 
 ### Zephyr Squad
 
+Auto-detects auth mode based on environment variables:
+
 ```
 Environment Variables
         │
         ▼
-┌──────────────────────────────┐
-│  ZephyrSquadConfig             │
-│  .from_env()                   │
-│                                │
-│  access_key (ZEPHYR_SQUAD_*)   │
-│  secret_key                    │
-│  account_id                    │
-└──────────────┬───────────────┘
+┌──────────────────────────────────┐
+│  ZephyrSquadConfig.from_env()      │
+│                                    │
+│  ZEPHYR_SQUAD_PAT_TOKEN set?       │
+│  ├─ Yes → auth_type = "pat"        │
+│  │   jira_base_url, pat_token,     │
+│  │   jira_email (optional)         │
+│  └─ No  → auth_type = "jwt"        │
+│       access_key, secret_key,      │
+│       account_id                   │
+└──────────────┬───────────────────┘
                │
-               ▼
-┌──────────────────────────────┐
-│  ZephyrSquadClient             │
-│  Per-request JWT generation:   │
-│  1. Build canonical path       │
-│     METHOD&PATH&PARAMS         │
-│  2. SHA-256 hash -> qsh        │
-│  3. JWT encode (HS256)         │
-│  4. Header: JWT <token>        │
-└──────────────────────────────┘
+      ┌────────┴─────────┐
+      ▼                  ▼
+┌───────────────┐  ┌───────────────────┐
+│ PAT Client      │  │ JWT Client          │
+│ Bearer / Basic  │  │ Per-request JWT:    │
+│ /rest/zapi/     │  │ 1. Canonical path   │
+│ latest/         │  │ 2. SHA-256 → qsh    │
+│                 │  │ 3. HS256 encode     │
+│                 │  │ 4. Header: JWT <t>  │
+└───────────────┘  └───────────────────┘
 ```
 
 ## Transport Modes
