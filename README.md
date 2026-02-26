@@ -87,6 +87,8 @@ zephyr-mcp -vv
 
 Add to your MCP client config (e.g., Claude Desktop):
 
+#### Using local installation
+
 ```json
 {
   "mcpServers": {
@@ -99,6 +101,38 @@ Add to your MCP client config (e.g., Claude Desktop):
     }
   }
 }
+```
+
+#### Using Docker
+
+```json
+{
+  "mcpServers": {
+    "zephyr": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "ZEPHYR_URL",
+        "-e", "ZEPHYR_PERSONAL_TOKEN",
+        "ghcr.io/dloiacono/zephyr-mcp:latest",
+        "--transport", "stdio"
+      ],
+      "env": {
+        "ZEPHYR_URL": "https://api.zephyrscale.smartbear.com/v2",
+        "ZEPHYR_PERSONAL_TOKEN": "your-token-here"
+      }
+    }
+  }
+}
+```
+
+You can also run the Docker image as a standalone SSE server:
+
+```bash
+docker run -p 8000:8000 \
+  -e ZEPHYR_URL=https://api.zephyrscale.smartbear.com/v2 \
+  -e ZEPHYR_PERSONAL_TOKEN=your-token-here \
+  ghcr.io/dloiacono/zephyr-mcp:latest
 ```
 
 ## Available Tools
