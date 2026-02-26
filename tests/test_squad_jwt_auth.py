@@ -97,7 +97,7 @@ class TestGenerateJwtToken:
         assert decoded["exp"] == 1000000 + JWT_EXPIRY_SECONDS
 
     def test_different_methods_produce_different_tokens(self):
-        args = dict(access_key="ak", secret_key="sk", account_id="aid", relative_path="/path")
+        args = {"access_key": "ak", "secret_key": "sk", "account_id": "aid", "relative_path": "/path"}
         token_get = generate_jwt_token(http_method="GET", **args)
         token_post = generate_jwt_token(http_method="POST", **args)
         assert token_get != token_post
